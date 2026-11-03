@@ -1,8 +1,10 @@
-name: astrbot_plugin_emoji_like
+name: astrbot_plugin_emoji_like # 这是你的插件的唯一识别名。
 display_name: 智能贴表情
-desc: 调用LLM判断消息的情感, 智能地给消息贴上QQ表情
-version: v2.0.0
-author: Zhalslar
-repo: https://github.com/Zhalslar/astrbot_plugin_emoji_like
+desc: 调用LLM判断消息的情感, 智能地给消息贴上QQ表情。情感判断可切换为 Jev 决策模型（更快更便宜）。
+version: v2.1.0 # 插件版本号。格式：v2.1.0 或者 v2.1
+author: Zhalslar # 作者
+repo: https://github.com/uuutt2023/astrbot_plugin_emoji_like # 插件的仓库地址
+
+# 事件监听器配置
 support_platforms:
   - aiocqhttp

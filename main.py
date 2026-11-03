@@ -20,6 +20,10 @@ class EmojiLikePlugin(Star):
         self.cfg = PluginConfig(config, context)
         self.judger = EmotionJudger(self.cfg)
 
+    async def terminate(self):
+        """插件卸载时关掉 Jev 客户端，避免 aiohttp 会话泄漏。"""
+        await self.judger.close()
+
     async def _emoji_like(
         self,
         event: AiocqhttpMessageEvent,

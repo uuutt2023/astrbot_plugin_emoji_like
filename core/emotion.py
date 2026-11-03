@@ -3,12 +3,22 @@ import re
 from astrbot.api import logger
 from astrbot.core.platform.astr_message_event import AstrMessageEvent
 
+from ..prompts import llm_emotion as llm_prompts
+from . import jev_emotion
 from .config import PluginConfig
+from .jev_transport import JevClient
+
+# 后端标识
+JUDGE_BACKEND_LLM = "llm"
+JUDGE_BACKEND_JEV = "jev"
+JUDGE_BACKEND_HYBRID = "hybrid"
+JUDGE_BACKENDS = (JUDGE_BACKEND_LLM, JUDGE_BACKEND_JEV, JUDGE_BACKEND_HYBRID)
 
 
 class EmotionJudger:
     def __init__(self, config: PluginConfig):
         self.cfg = config
+        self.jev_client = JevClient()
 
     async def judge_emotion(
         self,
@@ -19,11 +29,17 @@ class EmotionJudger:
         labels: list[str] | None = None,
     ) -> str | None:
         """
-        使用 LLM 判断文本情感并返回情感标签。
+        判断消息情感并返回情感标签。
+
+        按 ``judge_backend`` 分发：
+
+        - ``llm``：走原来的 LLM 判断，行为与接入 Jev 之前完全一致；
+        - ``jev``：走 Jev 决策模型（只计输入 token，不生成文字）；
+        - ``hybrid``：Jev 先判，把握不足时再回退 LLM。
 
         对外行为约定：
         - 本方法 **不会抛出异常**，失败时返回 None
-        - 若 event.extra 中已存在 emotion，则直接复用（避免重复调用 LLM）
+        - 若 event.extra 中已存在 emotion，则直接复用（避免重复调用）
         - 成功解析后会将 emotion 写入 event.extra，供后续流程复用
 
         :param event: AstrBot 消息事件
@@ -41,6 +57,18 @@ class EmotionJudger:
                 logger.debug(f"复用情感标签: {cached}")
                 return cached
         try:
+            backend = self.cfg.judge_backend or JUDGE_BACKEND_LLM
+            if backend in (JUDGE_BACKEND_JEV, JUDGE_BACKEND_HYBRID):
+                emotion = await self._judge_via_jev(text, image_urls, labels)
+                if emotion is not None:
+                    logger.debug(f"情感分析结果(Jev): {emotion}")
+                    event.set_extra("emotion", emotion)
+                    return emotion
+                if backend == JUDGE_BACKEND_JEV:
+                    # 纯 Jev 模式不回落 LLM：拿不到判定就不贴，
+                    # 由调用方随机贴一个表情（get_emoji_ids(None) 会走随机）。
+                    return None
+
             provider = self.cfg.get_judge_provider(event.unified_msg_origin)
             system_prompt, prompt = self._build_prompt(text, labels)
 
@@ -60,6 +88,49 @@ class EmotionJudger:
             logger.exception(f"情感分析失败: {e}")
             return None
 
+    async def _judge_via_jev(
+        self,
+        text: str,
+        image_urls: list[str] | None,
+        labels: list[str] | None,
+    ) -> str | None:
+        """用 Jev 判断情感；不可用时返回 None（调用方按后端策略处理）。"""
+        cfg = self.cfg.jev_config
+        if not cfg.get("enabled"):
+            logger.info("Jev 情感判断未启用")
+            return None
+        try:
+            result = await jev_emotion.judge_via_jev(
+                self.jev_client,
+                cfg,
+                text,
+                list(labels or []),
+                has_image=bool(image_urls),
+            )
+        except Exception as e:
+            logger.error(f"Jev 情感判断异常: {e}")
+            return None
+
+        if not result.get("ok"):
+            logger.warning(
+                f"Jev 未给出可用判定（{result.get('reason', '未知')}）"
+            )
+            return None
+        logger.info(
+            f"Jev 情感判定: {result.get('emotion')} "
+            f"置信度 {result.get('confidence', 0.0):.3f} "
+            f"提示词 {result.get('prompt_version', '')} "
+            f"语言 {result.get('language', '')}"
+        )
+        return str(result.get("emotion") or "")
+
+    async def close(self):
+        """关闭 Jev 客户端（插件卸载时调用）。"""
+        try:
+            await self.jev_client.close()
+        except Exception as e:
+            logger.warning(f"关闭 Jev 客户端失败: {e}")
+
     # =========================
     # 内部方法
     # =========================
@@ -69,23 +140,8 @@ class EmotionJudger:
         text: str,
         labels: list[str] | None,
     ) -> tuple[str, str]:
-        if labels:
-            label_hint = f"只能从以下情感标签中选择一个：{labels}\n"
-        else:
-            label_hint = (
-                "不限制情感标签，请自行判断文本的主要情感。\n"
-                "情感应为简短、常见、可概括的情感词\n"
-            )
-
-        system_prompt = (
-            "你是一个情感分析专家。\n"
-            f"{label_hint}"
-            "请严格按照 JSON 格式输出，不要包含任何多余内容。\n"
-            '输出示例：{"emotion": "开心"}'
-        )
-
-        prompt = f"文本内容：{text}"
-        return system_prompt, prompt
+        """构造情感分析提示词（文案在 prompts/llm_emotion.py）。"""
+        return llm_prompts.build_emotion_prompt(text, labels)
 
     def _parse_llm_response(self, text: str) -> str:
         # 清理 markdown 代码块标记（支持单行和多行，兼容 \r\n 换行）

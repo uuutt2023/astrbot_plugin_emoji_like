@@ -115,6 +115,9 @@ class PluginConfig(ConfigNode):
     judge_provider_id: str
     emoji_interval: float
     emotions_mapping_list: list[str]
+    # 情感判断后端：llm / jev / hybrid（老配置没这个键，按 llm 处理）
+    # 只写注解、不给类级默认值：类属性会先于 __getattr__ 命中，配置值就读不到了
+    judge_backend: str | None
 
     _plugin_name = "astrbot_plugin_emoji_like"
 
@@ -132,6 +135,12 @@ class PluginConfig(ConfigNode):
 
         self.emotion_mapping = self.parse_mapping_list()
         self.emotion_labels: list[str] = list(self.emotion_mapping.keys())
+
+    @property
+    def jev_config(self) -> dict[str, Any]:
+        """Jev 决策后端的配置（老配置没有这一节时返回空 dict）。"""
+        data = self._data.get("jev_judge")
+        return dict(data) if isinstance(data, Mapping) else {}
 
     def parse_mapping_list(self) -> dict[str, list[int]]:
         """
