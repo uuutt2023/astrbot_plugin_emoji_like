@@ -40,6 +40,8 @@ Jev 的候选选项**直接取自「情感映射表」里配的情感标签**—
 1. 在「Jev 判断」分组里打开「启用 Jev 判断」，填入 API Key
    （[jevmodel.org 控制台](https://jevmodel.org/zh/docs/) 或
    [TypeSafe](https://console.typesafe.ai)）；
+   若中转站用的是 OpenAI Decisions 端点，把「接口协议」切成 `decisions`
+   （POST `/v1/decisions`）——插件会自动翻译请求体与响应；
 2. 把「情感判断的后端」改成 `jev` 或 `hybrid`；
 3. 重载插件。
 
