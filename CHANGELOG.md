@@ -5,6 +5,8 @@
 上游仓库（Zhalslar/astrbot_plugin_emoji_like）已停止维护，本仓库为其续作分支。
 
 ### Added
+- **自报家门**：请求网关时带上 `X-Jev-Gateway-Client` 头（插件名），
+  网关据此在拓扑图里显示这个插件的调用次数、错误数与走的协议。
 - **请求协议改成固定下拉**：协议只有 SystemOne / OpenAI Decisions / Custom 三项，
   网关里同一种协议可以登记多个入口，按优先级分层后由负载均衡策略挑选，插件这边
   不用再关心有几条上游。
