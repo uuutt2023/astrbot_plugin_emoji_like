@@ -37,16 +37,18 @@ Jev 的候选选项**直接取自「情感映射表」里配的情感标签**—
 
 使用步骤：
 
-1. 在「Jev 判断」分组里打开「启用 Jev 判断」，填入 API Key
-   （[jevmodel.org 控制台](https://jevmodel.org/zh/docs/) 或
-   [TypeSafe](https://console.typesafe.ai)）；
-   若中转站用的是 OpenAI Decisions 端点，把「接口协议」切成 `decisions`
-   （POST `/v1/decisions`）——插件会自动翻译请求体与响应；
-2. 把「情感判断的后端」改成 `jev` 或 `hybrid`；
-3. 重载插件。
+1. 装 [astrbot_plugin_jev_gateway](https://github.com/uuutt2023/astrbot_plugin_jev_gateway)，
+   在网关里登记好 API 入口（地址、Key、模型、协议类型）；
+2. 在「Jev 判断」分组里打开「启用 Jev 判断」，填「网关代理地址」
+   （如 `http://127.0.0.1:8770`）与「请求协议」（如 `systemone`）；
+3. 把「情感判断的后端」改成 `jev` 或 `hybrid`；
+4. 重载插件。
+
+协议翻译（SystemOne ⇄ OpenAI Decisions）、重试、30 秒去重缓存、余额追踪都在网关那边，
+本插件只管发问题、读答案。换网关时只改网关一处。
 
 Jev 只对输入 token 计费、输出免费，上游失败不计费且可安全重试。
-想验证判定质量，跑 `python scripts/eval_emotion.py`（需要 `JEVMODEL_API_KEY`）。
+想验证判定质量，跑 `python scripts/eval_emotion.py --gateway http://127.0.0.1:8770`。
 
 ## 🗂️ 目录结构
 

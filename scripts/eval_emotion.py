@@ -59,15 +59,9 @@ CASES = [
 
 
 async def run(args) -> int:
-    api_key = args.api_key or os.environ.get("JEVMODEL_API_KEY", "")
-    if not api_key:
-        print("需要 Jev API Key：设置环境变量 JEVMODEL_API_KEY 或用 --api-key 传入")
-        return 2
-
     cfg = {
-        "api_key": api_key,
-        "base_url": args.base_url,
-        "model": args.model,
+        "proxy_url": args.gateway,
+        "proxy_protocol": args.protocol,
         "timeout_sec": args.timeout_sec,
         "retries": 1,
         "gate_mode": "threshold",
@@ -111,9 +105,8 @@ async def run(args) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Jev 情感判定离线评测")
-    parser.add_argument("--api-key", default="", help="Jev API Key（默认读 JEVMODEL_API_KEY）")
-    parser.add_argument("--base-url", default="https://jevmodel.org", help="Jev 网关地址")
-    parser.add_argument("--model", default="jev-latest", help="Jev 模型名")
+    parser.add_argument("--gateway", default="http://127.0.0.1:8770", help="Jev 决策网关地址")
+    parser.add_argument("--protocol", default="systemone", help="网关里登记的协议名")
     parser.add_argument("--timeout-sec", type=float, default=10.0, help="单次请求超时（秒）")
     parser.add_argument("--min-confidence", type=float, default=0.6, help="采信阈值")
     parser.add_argument("--min-accuracy", type=float, default=0.7, help="准确率门槛")
