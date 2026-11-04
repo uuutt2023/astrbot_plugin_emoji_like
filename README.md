@@ -40,7 +40,8 @@ Jev 的候选选项**直接取自「情感映射表」里配的情感标签**—
 1. 装 [astrbot_plugin_jev_gateway](https://github.com/uuutt2023/astrbot_plugin_jev_gateway)，
    在网关里登记好 API 入口（地址、Key、模型、协议类型）；
 2. 在「Jev 判断」分组里打开「启用 Jev 判断」，填「网关代理地址」
-   （如 `http://127.0.0.1:8770`）与「请求协议」（如 `systemone`）；
+   （如 `http://127.0.0.1:8770`）与「请求协议」（固定三项下拉：SystemOne /
+   OpenAI Decisions / Custom，网关里同协议登记多个入口时按优先级和负载均衡挑）；
 3. 把「情感判断的后端」改成 `jev` 或 `hybrid`；
 4. 重载插件。
 
