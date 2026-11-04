@@ -201,6 +201,8 @@ def status_reason(status: str) -> str:
     return {
         "unconfigured": "未配置 Jev API Key",
         "unauthorized": "API Key 无效或已被禁用",
+        "forbidden": "账户未激活或无权访问",
+        "payload_too_large": "请求体过大",
         "insufficient_credits": "Jev 账户余额不足",
         "invalid_request": "请求体未通过 Jev 校验",
         "rate_limited": "触发 Jev 限流",
