@@ -62,9 +62,10 @@ def resolve_language(preferred: Any, *texts: Any) -> str:
     return detect_language(*texts)
 
 
-def build_questions(labels: List[str], language: str = LANG_ZH) -> Dict[str, Dict[str, Any]]:
+def build_questions(labels: List[str], language: str = LANG_ZH,
+                    prompt: str = "") -> Dict[str, Dict[str, Any]]:
     """构造 Jev 的 choice 问题：选项就是情感标签。"""
-    instructions = (
+    instructions = (prompt or "").strip() or (
         prompts.INSTRUCTIONS_EN if language == LANG_EN else prompts.INSTRUCTIONS_ZH
     )
     criteria = prompts.criteria_for(list(labels), language)
@@ -233,7 +234,7 @@ async def judge_via_jev(
         return {"ok": False, "emotion": "", "confidence": 0.0, "reason": "没有可选的情感标签"}
 
     language = resolve_language(cfg.get("prompt_language"), *labels, text)
-    questions = build_questions(list(labels), language)
+    questions = build_questions(list(labels), language, str(cfg.get("prompt") or ""))
     state = build_state(
         text,
         has_image=has_image,

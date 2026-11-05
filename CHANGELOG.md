@@ -5,6 +5,8 @@
 上游仓库（Zhalslar/astrbot_plugin_emoji_like）已停止维护，本仓库为其续作分支。
 
 ### Added
+- **Jev 提示词可自定义**：配置里新增「Jev 提示词」（大文本框），留空＝用内置提示词；
+  填了就替换主判定题的问法，其余判断与选项集不受影响。
 - **自报家门**：请求网关时带上 `X-Jev-Gateway-Client` 头（插件名），
   网关据此在拓扑图里显示这个插件的调用次数、错误数与走的协议。
 - **请求协议改成固定下拉**：协议只有 SystemOne / OpenAI Decisions / Custom 三项，

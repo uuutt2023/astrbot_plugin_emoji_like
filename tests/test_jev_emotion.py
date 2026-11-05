@@ -245,3 +245,22 @@ class TestPrompts:
     def test_english_criteria(self):
         criteria = prompts.criteria_for(["happy"], "en")
         assert "happy" in criteria["happy"]
+
+
+class TestCustomPrompt:
+    """Jev 提示词可以自己改。"""
+
+    def test_default_prompt_used_when_empty(self):
+        from astrbot_plugin_emoji_like.core import jev_emotion
+        from astrbot_plugin_emoji_like.prompts import jev_emotion as prompts
+
+        question = jev_emotion.build_questions(["开心"], jev_emotion.LANG_ZH)
+        assert question[jev_emotion.QUESTION_NAME]["instructions"] == prompts.INSTRUCTIONS_ZH
+
+    def test_custom_prompt_replaces_instructions(self):
+        from astrbot_plugin_emoji_like.core import jev_emotion
+
+        question = jev_emotion.build_questions(["开心"], jev_emotion.LANG_ZH, "  自定义情感提示词  ")
+        assert question[jev_emotion.QUESTION_NAME]["instructions"] == "自定义情感提示词"
+        # 候选标签生成的选项集不受影响
+        assert question[jev_emotion.QUESTION_NAME]["criteria"]

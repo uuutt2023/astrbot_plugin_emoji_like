@@ -150,6 +150,14 @@
         "description": "发送上下文长度上限",
         "hint": "超出部分从最旧的内容开始丢。",
         "default": 1200
+      },
+      "prompt": {
+        "type": "text",
+        "description": "Jev 提示词",
+        "hint": "留空＝用内置提示词。改这里就是改问 Jev 的话。",
+        "editor_mode": true,
+        "editor_language": "markdown",
+        "default": ""
       }
     }
   }
